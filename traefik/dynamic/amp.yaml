@@ -1,0 +1,30 @@
+http:
+  middlewares:
+    amp-headers:
+      headers:
+        # Inject X-AMP-Scheme header with the incoming scheme (http/https)
+        customRequestHeaders:
+          X-AMP-Scheme: '{scheme}'
+
+    amp-buffer:
+      buffering:
+        # Allow up to 10 240 MiB request bodies (10 240 × 2^20 ≈ 10 737 418 240 bytes)
+        maxRequestBodyBytes: 10737418240
+        # Set large thresholds so response buffering is effectively "off"
+        maxResponseBodyBytes: 0
+        memRequestBodyBytes: 0
+        memResponseBodyBytes: 0
+  routers:
+    amp:
+      rule: 'Host(`amp.yourdomain.tld`)'
+      service: amp
+      tls: {}
+      middlewares:
+        - amp-headers
+        - amp-buffer
+
+  services:
+    amp:
+      loadBalancer:
+        servers:
+          - url: 'http://10.0.0.2:8080'

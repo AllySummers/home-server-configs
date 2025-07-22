@@ -1,0 +1,32 @@
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges=true
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+    env_file:
+      - .env
+    networks:
+      - proxy
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
+      CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN} # see https://doc.traefik.io/traefik/https/acme/#providers
+      TZ: Australia/Sydney
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /opt/infra/traefik/config/traefik.yaml:/traefik.yaml:ro
+      - /opt/infra/traefik/config/dynamic:/dynamic:ro
+      - /opt/infra/traefik/config/acme.json:/acme.json
+      - /opt/infra/traefik/logs:/var/log/traefik
+      - /opt/infra/traefik/data/:/data
+networks:
+  proxy:
+    external: true

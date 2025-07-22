@@ -1,0 +1,24 @@
+services:
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      - PUID=1500
+      - PGID=1500
+      - TZ=Australia/Sydney
+      - DELUGE_LOGLEVEL=error #optional
+    volumes:
+      - /data/deluge:/config
+      - /mnt/downloads:/downloads
+      - /mnt/media/anime:/media/anime:ro
+      - /mnt/media/movies:/media/movies:ro
+      - /mnt/media/movies4k:/media/movies4k:ro
+      - /mnt/media/music:/media/music:ro
+      - /mnt/media/tvshows:/media/tvshows:ro
+    ports:
+      - 8112:8112
+      - 6881:6881
+      - 6881:6881/udp
+      - 58846:58846 #optional
+    restart: unless-stopped
+networks: {}

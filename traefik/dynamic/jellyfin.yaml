@@ -1,0 +1,32 @@
+http:
+  middlewares:
+    jellyfin-mw:
+      headers:
+        customResponseHeaders:
+          X-Robots-Tag: "noindex,nofollow,nosnippet,noarchive,notranslate,noimageindex"
+          X-XSS-PROTECTION: "1"
+        sslRedirect: true
+        sslHost: "jellyfin.yourdomain.tld:9999"
+        sslForceHost: true
+        stsSeconds: 315360000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
+        frameDeny: true
+        contentTypeNosniff: true
+        customFrameOptionsValue: "allow-from https://yourdomain.tld"
+  routers:
+    jellyfin:
+      rule: 'Host(`jellyfin.yourdomain.tld`)'
+      service: jellyfin
+      tls: {}
+
+  services:
+    jellyfin:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: 'http://10.0.0.2:8096'
+
+
+

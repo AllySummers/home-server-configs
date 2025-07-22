@@ -1,0 +1,30 @@
+services:
+  convertx:
+    image: ghcr.io/c4illin/convertx
+    container_name: convertx
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+    runtime: nvidia
+    ports:
+      - 3555:3000
+    environment:
+      #- JWT_SECRET=aLongAndSecretStringUsedToSignTheJSONWebToken1234 # will use randomUUID() if unset
+      - PUID=1500
+      - PGID=1500
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+      - ALLOW_UNAUTHENTICATED=true
+    volumes:
+      - /data/convertx:/app/data
+      - /mnt/convertx:/convertx
+    devices:
+      - /dev/dri/card1:/dev/dri/card1
+      - /dev/dri/renderD129:/dev/dri/renderD129
+networks: {}

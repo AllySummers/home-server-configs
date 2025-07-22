@@ -1,0 +1,33 @@
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+    runtime: nvidia
+    environment:
+      - PUID=1500
+      - PGID=1500
+      - VERSION=latest
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+    volumes:
+      - /data/plex:/config
+      - /tmp/plex/transcode:/transcode
+      - /mnt/media/anime:/media/anime
+      - /mnt/media/movies:/media/movies
+      - /mnt/media/movies4k:/media/movies4k
+      - /mnt/media/music:/media/music
+      - /mnt/media/tvshows:/media/tvshows
+    restart: unless-stopped
+    devices:
+      - /dev/dri/card1:/dev/dri/card1
+      - /dev/dri/renderD129:/dev/dri/renderD129
+networks: {}

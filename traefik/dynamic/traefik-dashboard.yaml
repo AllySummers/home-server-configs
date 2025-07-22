@@ -1,0 +1,30 @@
+http:
+  middlewares:
+    traefik-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'
+                - '"traefik"'
+              regex: false 
+              contains: true
+              required: true 
+  routers:
+    ## Secure router for the dashboard on HTTPS
+    traefik:
+      rule: 'Host(`traefik.yourdomain.tld`)'
+      service: traefik-dashboard # Traefik's internal API/dashboard
+      tls: {}
+      middlewares:
+        - oidc-auth
+        - traefik-role
+        - common-security
+
+  services:
+    traefik-dashboard:
+      loadBalancer:
+        servers:
+          - url: 'http://traefik:8080'

@@ -1,0 +1,28 @@
+http:
+  middlewares:
+    filebrowser-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'
+                - '"files"'
+              regex: false 
+              contains: true
+              required: true 
+  routers:
+    filebrowser:
+      rule: 'Host(`files.yourdomain.tld`)'
+      service: filebrowser
+      tls: {}
+      middlewares:
+        - oidc-auth
+        - filebrowser-role
+
+  services:
+    filebrowser:
+      loadBalancer:
+        servers:
+          - url: 'http://10.0.0.2:8117'

@@ -1,0 +1,29 @@
+http:
+  middlewares:
+    beets-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'
+                - '"beets"'
+              regex: false 
+              contains: true
+              required: true 
+  routers:
+    ## Secure router for the dashboard on HTTPS
+    beets:
+      rule: 'Host(`beets.yourdomain.tld`)'
+      service: beets
+      tls: {}
+      middlewares:
+        - oidc-auth
+        - beets-role
+
+  services:
+    beets:
+      loadBalancer:
+        servers:
+          - url: 'http://10.0.0.2:8337'

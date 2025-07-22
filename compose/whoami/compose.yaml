@@ -1,0 +1,10 @@
+services:
+  whoami:
+    image: containous/whoami:latest
+    restart: always
+    container_name: whoami
+    networks:
+      - proxy
+networks:
+  proxy:
+    external: true

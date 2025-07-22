@@ -1,0 +1,20 @@
+http:
+  middlewares:
+    serve-msid-json:
+      plugin:
+        inlineResponse:
+          matchers:
+            - path:
+                abs: '/.well-known/microsoft-identity-association.json'
+              statusCode: 200
+              response:
+                json:
+                  associatedApplications:
+                    - applicationId: 'removed' # your payload
+  routers:
+    msid-association:
+      rule: Host(`yourdomain.tld`) && Path(`/.well-known/microsoft-identity-association.json`)
+      tls: {}
+      middlewares:
+        - serve-msid-json
+      service: noop@internal

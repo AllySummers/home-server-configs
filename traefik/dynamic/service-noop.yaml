@@ -1,0 +1,7 @@
+http:
+  services:
+    noop:
+      loadBalancer:
+        # noop@internal is a special no-op service built into Traefik
+        servers:
+          - url: 'noop://internal'

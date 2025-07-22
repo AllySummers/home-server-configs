@@ -1,0 +1,15 @@
+services:
+  radarr4k:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr4k
+    environment:
+      - PUID=1500
+      - PGID=1500
+      - TZ=Australia/Sydney
+    volumes:
+      - /data/radarr4k:/config
+      - /mnt/media/movies4k:/media/movies4k
+      - /mnt/downloads:/downloads #optional
+    ports:
+      - 17878:17878
+    restart: unless-stopped

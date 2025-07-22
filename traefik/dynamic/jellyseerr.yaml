@@ -1,0 +1,18 @@
+http:
+  routers:
+    overseerr-internal:
+      rule: '(Host(`overseerr.yourdomain.tld`) || Host(`jellyseerr.yourdomain.tld`) || Host(`req.yourdomain.tld`)) && (ClientIP(`10.0.0.0/8`) || ClientIP(`172.16.0.0/12`) || ClientIP(`192.168.0.0/16`) || ClientIP(`127.0.0.0/8`))'
+      service: jellyseerr-service
+      tls: {}
+      priority: 100
+
+    jellyseerr-router:
+      rule: 'Host(`overseerr.yourdomain.tld`) || Host(`jellyseerr.yourdomain.tld`) || Host(`req.yourdomain.tld`)'
+      tls: {}
+        # jellyseerr has oidc login enabled, so we don't need oidc middleware here
+      service: jellyseerr-service
+  services:
+    jellyseerr-service:
+      loadBalancer:
+        servers:
+          - url: 'http://10.0.0.2:5055'

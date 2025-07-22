@@ -1,0 +1,21 @@
+services:
+  flood:
+    hostname: flood
+    image: jesec/flood
+    user: 1500:1500
+    restart: unless-stopped
+    command: --port 3001 --allowedpath /downloads --auth none --dehost 10.0.0.2
+      --deport 58846 --deuser localclient --depass deluge
+    environment:
+      HOME: /config
+    volumes:
+      - /data/deluge:/config
+      - /mnt/downloads:/downloads
+      - /mnt/media/anime:/media/anime:ro
+      - /mnt/media/movies:/media/movies:ro
+      - /mnt/media/movies4k:/media/movies4k:ro
+      - /mnt/media/music:/media/music:ro
+      - /mnt/media/tvshows:/media/tvshows:ro
+    ports:
+      - 3001:3001
+networks: {}

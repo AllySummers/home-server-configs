@@ -1,0 +1,15 @@
+services:
+  filebrowser:
+    container_name: filebrowser
+    volumes:
+      - /mnt:/srv
+      - /data/filebrowser/database:/database
+      - /data/filebrowser/config:/config
+    environment:
+      - PUID=1500
+      - PGID=1500
+      - FB_NOAUTH=noauth
+    ports:
+      - 8117:80
+    image: filebrowser/filebrowser:s6
+networks: {}

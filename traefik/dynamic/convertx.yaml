@@ -1,0 +1,28 @@
+http:
+  middlewares:
+    convertx-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'
+                - '"convertx"'
+              regex: false 
+              contains: true 
+              required: true 
+  routers:
+    convertx:
+      rule: 'Host(`convertx.yourdomain.tld`)'
+      service: convertx
+      tls: {}
+      middlewares:
+        - oidc-auth
+        - convertx-role
+
+  services:
+    convertx:
+      loadBalancer:
+        servers:
+          - url: 'http://10.0.0.2:3555'

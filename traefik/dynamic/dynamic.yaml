@@ -1,0 +1,42 @@
+$schema: 'https://www.schemastore.org/traefik-v3-file-provider.json'
+tls:  
+  stores:  
+    default:  
+      defaultGeneratedCert:  
+        resolver: cloudflare  
+        domain:  
+          main: yourdomain.tld  
+          sans:  
+            - '*.yourdomain.tld'  
+            - '*.dockge.yourdomain.tld'  
+            - '*.cockpit.yourdomain.tld'
+
+http:
+  middlewares:
+    common-security:
+      chain:
+        middlewares:
+          - default-security-headers
+
+    default-security-headers:
+      headers:
+        customBrowserXSSValue: 0 # X-XSS-Protection=1; mode=block
+        contentTypeNosniff: true # X-Content-Type-Options=nosniff
+        forceSTSHeader: true # Add the Strict-Transport-Security header even when the connection is HTTP
+        frameDeny: false # X-Frame-Options=deny
+        referrerPolicy: 'strict-origin-when-cross-origin'
+        stsIncludeSubdomains: true # Add includeSubdomains to the Strict-Transport-Security header
+        stsPreload: true # Add preload flag appended to the Strict-Transport-Security header
+        stsSeconds: 3153600 # Set the max-age of the Strict-Transport-Security header (63072000 = 2 years)
+        contentSecurityPolicy: >-
+          default-src 'self';
+          img-src 'self' data:;
+          media-src 'self' data:;
+          script-src 'self';
+          style-src 'self' 'unsafe-inline';
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true

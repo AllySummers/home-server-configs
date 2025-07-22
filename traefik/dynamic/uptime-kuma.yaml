@@ -1,0 +1,39 @@
+http:
+  middlewares:
+    uptime-kuma-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'
+                - '"uptime-kuma"'
+              regex: false 
+              contains: true
+              required: true 
+  routers:
+    uptime-kuma-manifest:
+      rule: "Host(`uptime-kuma.yourdomain.tld`) && PathRegexp(`/.*manifest\\.json$`)"
+      service: uptime-kuma
+      tls: {}
+      priority: 100
+
+    uptime-kuma:
+      rule: 'Host(`uptime-kuma.yourdomain.tld`)'
+      service: uptime-kuma
+      tls: {}
+      middlewares:
+        - oidc-auth
+        - uptime-kuma-role
+
+    # public status page
+    status:
+      rule: 'Host(`status.yourdomain.tld`)'
+      service: uptime-kuma
+      tls: {}
+  services:
+    uptime-kuma:
+      loadBalancer:
+        servers:
+          - url: 'http://uptime-kuma:3001' # points at your uptime-kuma container on the "web" network

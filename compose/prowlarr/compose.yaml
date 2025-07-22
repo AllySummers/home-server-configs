@@ -1,0 +1,14 @@
+services:
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1500
+      - PGID=1500
+      - TZ=Australia/Sydney
+    volumes:
+      - /data/prowlarr:/config
+      - /mnt/downloads:/downloads #optional
+    ports:
+      - 9696:9696
+    restart: unless-stopped

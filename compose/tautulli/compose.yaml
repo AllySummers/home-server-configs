@@ -1,0 +1,14 @@
+services:
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - /data/tautulli:/config
+    ports:
+      - 18181:8181
+    restart: unless-stopped
+networks: {}

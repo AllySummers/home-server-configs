@@ -1,0 +1,102 @@
+{{/* Define your applications and ports */}}
+{{- $apps := dict
+    "bazarr"    6767
+    "lidarr"    8686
+    "prowlarr"  9696
+    "radarr"    7878
+    "radarr4k" 17878
+    "sonarr"    8989
+ -}}
+
+http:
+  middlewares:
+    radarr4k-favicon:
+      redirectRegex:
+        # Match the original request URL
+        regex: "^https?://[^/]+/favicon\\.ico$"
+        # Send client to the GitHub raw file
+        replacement: "https://raw.githubusercontent.com/themepark-dev/theme.park/develop/css/addons/radarr/radarr-4k-favicon/favicon.ico"
+        permanent: true
+    radarr4k-theme:
+      plugin:
+        themepark:
+          # The name of the supported application listed on https://docs.theme-park.dev/themes.
+          app: radarr
+
+          # If using the 'darker' addon the theme MUST be excluded or set to 'base'
+          theme: base
+          #baseUrl: https://themepark.yourdomain.tld/
+
+          # Multiple addons can be included at the same time
+          addons:
+            - darker
+            - radarr-4k-logo
+{{- range $name, $port := $apps }}
+    {{- if not (eq $name "radarr4k") }}
+    {{ $name }}-theme:
+        plugin:
+          themepark:
+            app: {{ $name }}
+            theme: base
+            addons:
+            - darker
+    {{- end }}
+{{- end }}
+
+{{- /* Generate a role-validation middleware for each app */}}
+{{- range $name, $port := $apps }}
+    {{ $name }}-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'     # Internal role check
+                - '"{{ $name }}"' # Exact match on the token for {{ $name }}
+              regex: false
+              contains: true
+              required: true
+{{- end }}
+
+  routers:
+    radarr4k-favicon-redirect:
+      rule: "Host(`radarr4k.yourdomain.tld`) && Path(`/favicon.ico`)"
+      middlewares:
+        - radarr4k-favicon
+      service: noop@internal
+      tls: {}
+      priority: 150
+
+{{- /* 1) Internal-only router: highest priority, no auth */}}
+{{- range $name, $port := $apps }}
+    {{ $name }}-api-internal:
+      rule: >-
+        Host(`{{ $name }}.yourdomain.tld`) &&
+        (ClientIP(`10.0.0.0/8`) || ClientIP(`172.16.0.0/12`) ||
+         ClientIP(`192.168.0.0/16`) || ClientIP(`127.0.0.0/8`))
+      service: {{ $name }}
+      tls: {}
+      priority: 100
+
+{{- /* 2) Dashboard router */}}
+    {{ $name }}:
+      rule: "Host(`{{ $name }}.yourdomain.tld`)"
+      service: {{ $name }}
+      tls: {}
+      middlewares:
+        - oidc-auth
+        - {{ $name }}-role
+        - {{ $name }}-theme
+      priority: 10
+
+{{- end }}
+
+  services:
+{{- /* Define load balancer services for each app */}}
+{{- range $name, $port := $apps }}
+    {{ $name }}:
+      loadBalancer:
+        servers:
+          - url: "http://10.0.0.2:{{ $port }}"
+{{- end }}

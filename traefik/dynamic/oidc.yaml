@@ -1,0 +1,87 @@
+http:
+  middlewares:
+    strip-headers:
+      headers:
+        customRequestHeaders:
+          X-Oidc-Groups: ''
+          X-Oidc-Username: ''
+          X-Oidc-Email: ''
+          X-Oidc-Preferred-Username: ''
+          X-Oidc-Name: ''
+          X-Oidc-Picture: ''
+          X-Oidc-Roles: ''
+          Remote-User: ''
+
+    admin-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'
+              regex: false 
+              contains: true
+              required: true 
+
+    oidc-auth:
+      plugin:
+        traefik-oidc-auth:
+          # LogLevel: debug
+          # URL to redirect users when they log out
+          LogoutUri: 'https://auth.yourdomain.tld/logout'
+          CallbackUri: 'https://auth.yourdomain.tld/callback'
+          PostLogoutRedirectUri: 'https://auth.yourdomain.tld/logged-out'
+          SessionCookie:
+            Domain: '.yourdomain.tld'
+          Provider:
+            TokenValidation: 'IdToken'
+            Url: 'https://sso.yourdomain.tld/oidc'
+            ClientId: 'your-client-id'
+            ClientSecret: 'your-client-secret'
+            UsePkce: false
+          Secret: 'your-secret'
+          Headers:
+            - Name: 'Authorization'
+              Value: '{{`Bearer {{ .accessToken }}`}}'
+            - Name: 'X-Oidc-Preferred-Username'
+              Value: '{{`{{ .claims.preferred_username }}`}}'
+            - Name: 'X-Oidc-Username'
+              Value: '{{`{{ .claims.username }}`}}'
+            - Name: 'Remote-User'
+              Value: '{{`{{ .claims.username }}`}}'
+            - Name: 'X-Oidc-Name'
+              Value: '{{`{{ .claims.name }}`}}'
+            - Name: 'X-Oidc-Picture'
+              Value: '{{`{{ .claims.picture }}`}}'
+            - Name: 'X-Oidc-Email'
+              Value: '{{`{{ .claims.email }}`}}'
+            - Name: 'X-Oidc-Groups'
+              Value: '{{`{{ .claims.groups }}`}}'
+            - Name: X-Oidc-Roles
+              Value: >-
+                {{`{{ printf "[" }}{{- range $i, $r := .claims.roles -}}{{if gt $i 0}},{{end}}"{{ $r }}"{{- end}}{{printf "]" }}`}}
+
+          scopes:
+            - openid
+            - email
+            - preferred_username
+            - profile
+            - identities
+            - roles
+            - groups
+
+  routers:
+    oidc-callback:
+      rule: Host(`auth.yourdomain.tld`) && Path(`/callback`)
+      service: noop@internal
+      middlewares:
+        - oidc-auth
+      tls: {}
+
+    oidc-logout:
+      rule: Host(`auth.yourdomain.tld`) && Path(`/logout`)
+      service: noop@internal
+      middlewares:
+        - oidc-auth
+      tls: {}

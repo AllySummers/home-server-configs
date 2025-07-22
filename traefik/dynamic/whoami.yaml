@@ -1,0 +1,29 @@
+http:
+  middlewares:
+    whoami-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'
+                - '"whoami"'
+              regex: false 
+              contains: true
+              required: true 
+  routers:
+    whoami-router:
+      rule: Host(`whoami.yourdomain.tld`)
+      tls: {}
+      middlewares:
+        - oidc-auth
+        - whoami-role
+        - common-security
+      service: whoami-service
+  services:
+    whoami-service:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: 'http://whoami:80'

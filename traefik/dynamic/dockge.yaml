@@ -1,0 +1,43 @@
+http:
+  middlewares:
+    dockge-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'
+                - '"dockge"'
+              regex: false 
+              contains: true
+              required: true 
+  routers:
+    # aka dockge-main
+    dockge-minerva:
+      rule: 'Host(`dockge.yourdomain.tld`) || Host(`minerva.dockge.yourdomain.tld`)'
+      service: dockge-minerva
+      tls: {}
+      middlewares:
+        - oidc-auth
+        - dockge-role
+        - common-security
+
+    dockge-stalker:
+      rule: 'Host(`stalker.dockge.yourdomain.tld`)'
+      service: dockge-stalker
+      tls: {}
+      middlewares:
+        - oidc-auth
+        - dockge-role
+        - common-security
+
+  services:
+    dockge-minerva:
+      loadBalancer:
+        servers:
+          - url: 'http://dockge-minerva:5001'
+    dockge-stalker:
+      loadBalancer:
+        servers:
+          - url: 'http://10.0.0.2:5001'

@@ -1,0 +1,46 @@
+http:
+  middlewares:
+    qb-headers:
+      headers:
+        customRequestHeaders:
+          X-Frame-Options: 'SAMEORIGIN'
+          Referer: ''
+          Origin: ''
+
+    flood-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'
+                - '"flood"'
+              regex: false
+              contains: true
+              required: true
+
+  routers:
+    # 1) Internal-only router: bypass OIDC for private IPs
+    flood-internal:
+      rule: '(Host(`flood.yourdomain.tld`) || Host(`torrent.yourdomain.tld`)) && (ClientIP(`10.0.0.0/8`) || ClientIP(`172.16.0.0/12`) || ClientIP(`192.168.0.0/16`) || ClientIP(`127.0.0.0/8`))'
+      service: flood
+      tls: {}
+      priority: 100
+
+    # 2) External router: enforce OIDC + role for all others
+    flood:
+      rule: 'Host(`flood.yourdomain.tld`) || Host(`torrent.yourdomain.tld`)'
+      service: flood
+      tls: {}
+      middlewares:
+        - qb-headers
+        - oidc-auth
+        - flood-role
+      priority: 10
+
+  services:
+    flood:
+      loadBalancer:
+        servers:
+          - url: 'http://10.0.0.2:3001'

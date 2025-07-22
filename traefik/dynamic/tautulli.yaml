@@ -1,0 +1,28 @@
+http:
+  middlewares:
+    tautulli-role:
+      plugin:
+        validate-headers:
+          headers:
+            - name: 'X-Oidc-Roles'
+              matchtype: one
+              values:
+                - '"admin"'
+                - '"tautulli"'
+              regex: false 
+              contains: true #
+              required: true 
+  routers:
+    tautulli:
+      rule: 'Host(`tautulli.yourdomain.tld`)'
+      service: tautulli
+      tls: {}
+      middlewares:
+        - oidc-auth
+        - tautulli-role
+
+  services:
+    tautulli:
+      loadBalancer:
+        servers:
+          - url: 'http://10.0.0.2:18181'
